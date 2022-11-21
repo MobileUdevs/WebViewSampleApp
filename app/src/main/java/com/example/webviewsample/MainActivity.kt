@@ -1,9 +1,10 @@
 package com.example.webviewsample
 
+import android.annotation.SuppressLint
+import android.net.http.SslError
 import android.os.Bundle
 import android.view.View
-import android.webkit.WebResourceError
-import android.webkit.WebResourceRequest
+import android.webkit.SslErrorHandler
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -21,30 +22,28 @@ class MainActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
-
         binding.btnUrl.setOnClickListener {
             openUrl()
         }
-
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     private fun openUrl() {
         if (binding.etUrl.text!!.isEmpty()) {
             Toast.makeText(this, "Empty", Toast.LENGTH_SHORT).show()
-            return;
+            return
         }
         var url = binding.etUrl.text.toString()
 
         if (!url.startsWith("http://") && !url.startsWith("https://")) {
-            url = "http://$url";
+            url = "https://$url"
         }
 
         webView = binding.webView
 
-
         webView.apply {
-            webView.loadUrl(url!!)
-            webViewClient = WebViewClient()
+            webView.loadUrl(url)
+            webViewClient = SSLTolerentWebViewClient()
             settings.javaScriptEnabled = true
         }
         binding.btnUrl.visibility = View.GONE
@@ -61,4 +60,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun onReceivedSslError(view: WebView?, handler: SslErrorHandler) {
+        handler.proceed() // Ignore SSL certificate errors
+    }
+}
+
+internal class SSLTolerentWebViewClient : WebViewClient() {
+    @SuppressLint("WebViewClientOnReceivedSslError")
+    override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
+        handler.proceed() // Ignore SSL certificate errors
+    }
 }
